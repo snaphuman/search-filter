@@ -1,18 +1,18 @@
 <?php
 /*
-Plugin Name: Search & Filter
-Plugin URI: http://www.designsandcode.com/447/wordpress-search-filter-plugin-for-taxonomies/
-Description: Search and Filtering system for Pages, Posts, Categories, Tags and Taxonomies
-Author: Designs & Code
-Author URI: http://www.designsandcode.com/
-Version: 1.2.12
-Text Domain: searchandfilter
-License: GPLv2
+  Plugin Name: Search & Filter
+  Plugin URI: http://www.designsandcode.com/447/wordpress-search-filter-plugin-for-taxonomies/
+  Description: Search and Filtering system for Pages, Posts, Categories, Tags and Taxonomies
+  Author: Designs & Code
+  Author URI: http://www.designsandcode.com/
+  Version: 1.2.12
+  Text Domain: searchandfilter
+  License: GPLv2
 */
 
 /*
-* Set up Plugin Globals
-*/
+ * Set up Plugin Globals
+ */
 if (!defined('SEARCHANDFILTER_VERSION_NUM'))
     define('SEARCHANDFILTER_VERSION_NUM', '1.2.12');
 
@@ -43,8 +43,8 @@ if (!defined('SF_FPRE'))
 add_option(SEARCHANDFILTER_VERSION_KEY, SEARCHANDFILTER_VERSION_NUM);
 
 /*
-* Set up Plugin Globals
-*/
+ * Set up Plugin Globals
+ */
 if ( ! class_exists( 'SearchAndFilter' ) )
 {
 	class SearchAndFilter
@@ -126,7 +126,8 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 				'order_dir' => "",
 				'operators' => "",
 				'add_search_param' => "0",
-				'empty_search_url' => ""
+				'empty_search_url' => "",
+				'parents' => null
 				
 			), $atts));
 			
@@ -274,7 +275,22 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 			{
 				$types = array();
 			}
-			
+
+			// init `parent`
+			if($parents!=null)
+			{
+				$parents = explode(",",$parents);
+			}
+			else
+			{
+				$parents = explode(",",$parent);
+			}
+
+			if (!is_array($parents))
+			{
+				$parents = array();
+			}
+
 			//init empty_search_url
 			
 			
@@ -368,12 +384,16 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 				{
 					$operators[$i] =  "and"; //use default
 				}
+
+				if(isset($parents[$i])) {
+					$parent = $parents[$i];
+				}
 			}
 			
 			//set all form defaults / dropdowns etc
 			$this->set_defaults();
 
-			return $this->get_search_filter_form($submit_label, $search_placeholder, $fields, $types, $labels, $hierarchical, $hide_empty, $show_count, $post_types, $order_by, $order_dir, $operators, $all_items_labels, $empty_search_url, $add_search_param, $class);
+			return $this->get_search_filter_form($submit_label, $search_placeholder, $fields, $types, $labels, $hierarchical, $hide_empty, $show_count, $post_types, $order_by, $order_dir, $operators, $all_items_labels, $empty_search_url, $add_search_param, $class, $parent);
 		}
 
 
@@ -518,7 +538,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 
 		/*
 		 * check to set defaults - to be called after the shortcodes have been init so we can grab the wanted list of fields
-		*/
+		 */
 		public function set_defaults()
 		{
 			global $wp_query;
@@ -540,13 +560,13 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 					}
 				}
 			}
-			
+
 			$this->defaults[SF_FPRE.'category'] = $categories;
 
 
 			//grab search term for prefilling search input
 			if(isset($wp_query->query['s']))
-			{//!"£$%^&*()
+			{//!"Â£$%^&*()
 				$this->searchterm = trim(get_search_query());
 			}
 
@@ -626,7 +646,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 
 		/*
 		 * check to see if form has been submitted and handle vars
-		*/
+		 */
 
 		public function check_posts()
 		{
@@ -1085,7 +1105,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 			
 		}
 	
-		public function get_search_filter_form($submitlabel, $search_placeholder, $fields, $types, $labels, $hierarchical, $hide_empty, $show_count, $post_types, $order_by, $order_dir, $operators, $all_items_labels, $empty_search_url, $add_search_param, $class)
+		public function get_search_filter_form($submitlabel, $search_placeholder, $fields, $types, $labels, $hierarchical, $hide_empty, $show_count, $post_types, $order_by, $order_dir, $operators, $all_items_labels, $empty_search_url, $add_search_param, $class, $parent)
 		{
 			$returnvar = '';
 
@@ -1099,90 +1119,90 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 				<form action="" method="post" class="searchandfilter'.$addclass.'">
 					<div>';
 
-					if(!in_array("post_types", $fields))
-					{//then the user has not added it to the fields list so the user does not want a post types drop down... so add (if any) the post types to a hidden attribute
+			if(!in_array("post_types", $fields))
+			{//then the user has not added it to the fields list so the user does not want a post types drop down... so add (if any) the post types to a hidden attribute
 
-						if(($post_types!="")&&(is_array($post_types)))
-						{
-							foreach($post_types as $post_type)
-							{
-								$returnvar .= "<input type=\"hidden\" name=\"".SF_FPRE."post_types[]\" value=\"".esc_attr($post_type)."\" />";
-							}
-						}
+				if(($post_types!="")&&(is_array($post_types)))
+				{
+					foreach($post_types as $post_type)
+					{
+						$returnvar .= "<input type=\"hidden\" name=\"".SF_FPRE."post_types[]\" value=\"".esc_attr($post_type)."\" />";
 					}
-					$returnvar .= '
+				}
+			}
+			$returnvar .= '
 						<ul>';
 
-						$i = 0;
+					   $i = 0;
 						
-						foreach($fields as $field)
-						{
-							//special cases - post_types & post_date.. all others assumed regular wp taxonomy
+					   foreach($fields as $field)
+					   {
+						   //special cases - post_types & post_date.. all others assumed regular wp taxonomy
 							
-							if($field == "search")
-							{
-								$returnvar .=  '<li>';
-								if($labels[$i]!="")
-								{
-									$returnvar .= "<h4>".$labels[$i]."</h4>";
-								}
-								$clean_searchterm = (esc_attr($this->searchterm));
-								$returnvar .=  '<input type="text" name="'.SF_FPRE.'search" placeholder="'.esc_attr($search_placeholder).'" value="'.esc_attr($clean_searchterm).'">';
-								$returnvar .=  '</li>';
-							}
-							else if($field == "post_types") //a post can only every have 1 type, so checkboxes & multiselects will always be "OR"
-							{//build field array
+						   if($field == "search")
+						   {
+							   $returnvar .=  '<li>';
+							   if($labels[$i]!="")
+							   {
+								   $returnvar .= "<h4>".$labels[$i]."</h4>";
+							   }
+							   $clean_searchterm = (esc_attr($this->searchterm));
+							   $returnvar .=  '<input type="text" name="'.SF_FPRE.'search" placeholder="'.esc_attr($search_placeholder).'" value="'.esc_attr($clean_searchterm).'">';
+							   $returnvar .=  '</li>';
+						   }
+						   else if($field == "post_types") //a post can only every have 1 type, so checkboxes & multiselects will always be "OR"
+						   {//build field array
 							
-								//check to see if operator is set for this field
-								/*if(isset($operators[$i]))
-								{
-									$operators[$i] = strtolower($operators[$i]);
+							   //check to see if operator is set for this field
+							   /*if(isset($operators[$i]))
+								 {
+								 $operators[$i] = strtolower($operators[$i]);
 									
-									if(($operators[$i]=="and")||($operators[$i]=="or"))
-									{
-										$returnvar .= '<input type="hidden" name="'.SF_FPRE.$field.'_operator" value="'.$operators[$i].'" />';
-									}
-								}*/
+								 if(($operators[$i]=="and")||($operators[$i]=="or"))
+								 {
+								 $returnvar .= '<input type="hidden" name="'.SF_FPRE.$field.'_operator" value="'.$operators[$i].'" />';
+								 }
+								 }*/
 								
 								
-								$returnvar .= $this->build_post_type_element($types, $labels, $post_types, $field, $all_items_labels, $i);
+							   $returnvar .= $this->build_post_type_element($types, $labels, $post_types, $field, $all_items_labels, $i);
 
-							}
-							else if($field == 'post_date')
-							{
-								$returnvar .= $this->build_post_date_element($labels, $i, $types, $field);
-							}
-							else
-							{	
-								$returnvar .= $this->build_taxonomy_element($types, $labels, $field, $hierarchical, $hide_empty, $show_count, $order_by, $order_dir, $operators, $all_items_labels, $i);
-							}
-							$i++;
+						   }
+						   else if($field == 'post_date')
+						   {
+							   $returnvar .= $this->build_post_date_element($labels, $i, $types, $field);
+						   }
+						   else
+						   {
+							   $returnvar .= $this->build_taxonomy_element($types, $labels, $field, $hierarchical, $hide_empty, $show_count, $order_by, $order_dir, $operators, $all_items_labels, $parent, $i);
+						   }
+						   $i++;
 
-						}
+					   }
 
-						$returnvar .='<li>';
+					   $returnvar .='<li>';
 						
-						if($add_search_param==1)
-						{
-							$returnvar .= "<input type=\"hidden\" name=\"".SF_FPRE."add_search_param\" value=\"1\" />";
-						}
+					   if($add_search_param==1)
+					   {
+						   $returnvar .= "<input type=\"hidden\" name=\"".SF_FPRE."add_search_param\" value=\"1\" />";
+					   }
 						
-						if($empty_search_url!="")
-						{
-							$returnvar .= "<input type=\"hidden\" name=\"".SF_FPRE."empty_search_url\" value=\"".esc_url($empty_search_url)."\" />";
-						}
+					   if($empty_search_url!="")
+					   {
+						   $returnvar .= "<input type=\"hidden\" name=\"".SF_FPRE."empty_search_url\" value=\"".esc_url($empty_search_url)."\" />";
+					   }
 						
 						
-						$returnvar .=
-							'<input type="hidden" name="'.SF_FPRE.'submitted" value="1">
+					   $returnvar .=
+								  '<input type="hidden" name="'.SF_FPRE.'submitted" value="1">
 							<input type="submit" value="'.esc_attr($submitlabel).'">
 						</li>';
 
-						$returnvar .= "</ul>";
-					$returnvar .= '</div>
+					   $returnvar .= "</ul>";
+					   $returnvar .= '</div>
 				</form>';
 
-			return $returnvar;
+					   return $returnvar;
 		}
 		
 		///////////////////////////////////////////////////////////
@@ -1324,7 +1344,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 		}
 		
 		//gets all the data for the taxonomy then display as form element
-		function build_taxonomy_element($types, $labels, $taxonomy, $hierarchical, $hide_empty, $show_count, $order_by, $order_dir, $operators, $all_items_labels, $i)
+		function build_taxonomy_element($types, $labels, $taxonomy, $hierarchical, $hide_empty, $show_count, $order_by, $order_dir, $operators, $all_items_labels, $parent, $i)
 		{
 			$returnvar = "";
 			
@@ -1352,7 +1372,8 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 					'show_option_none' => '',
 					'show_count' => '0',
 					'show_option_all' => '',
-					'show_option_all_sf' => ''
+					'show_option_all_sf' => '',
+					'parent' => $parent,
 				);
 				
 				if(isset($hierarchical[$i]))
@@ -1449,15 +1470,23 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 		
 		/*
 		 * Display various forms
-		*/
+		 */
 
 		//use wp array walker to enable hierarchical display
 		public function generate_wp_dropdown($args, $name, $currentid = 0, $labels = null, $defaultval = "0")
 		{
 			$args['name'] = $args['sf_name'];
-			
+
+
 			$returnvar = '';
-			
+
+			if(is_numeric($args['parent'])){
+				$args['parent'] = intval($args['parent']);
+			} else {
+				unset($args['parent']);
+			}
+
+
 			if($args['show_option_all_sf']=="")
 			{
 				$args['show_option_all'] = $labels->all_items != "" ? $labels->all_items : 'All ' . $labels->name;
@@ -1738,8 +1767,8 @@ if ( class_exists( 'SearchAndFilter' ) )
 }
 
 /*
-* Includes
-*/
+ * Includes
+ */
 
 // classes
 require_once(SEARCHANDFILTER_PLUGIN_DIR."/of-list-table.php");
