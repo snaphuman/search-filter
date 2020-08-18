@@ -190,7 +190,7 @@ class OF_Variable_List_Table extends WP_List_Table {
 			"name"			=> "fields",
 			"defaultval"	=> "&nbsp;",
 			"options"		=> "<em>Comma seperated list of any field names and Public Taxonomies:</em><br /><br />search<br />post_date<br />post_types<br /><em>*public taxonomy names</em>",
-			"info"			=> "Example using all your public taxonomies (copy &amp; paste!):<pre><code class='string'>[searchandfilter taxonomies=\"search,".$fulltaxonomylist."\"]</code></pre>"
+			"info"			=> "Example using all your public taxonomies (copy &amp; paste!):<pre><code class='string'>[searchandfilter fields=\"search,".$fulltaxonomylist."\"]</code></pre>"
 		);
 		$counter++;
 
@@ -199,7 +199,7 @@ class OF_Variable_List_Table extends WP_List_Table {
 			"ID"			=> $counter,
 			"name"			=> "types",
 			"defaultval"	=> "<code class='string large'>select</code>",
-			"options"		=> "<em>Comma seperated list of any of the types found below:</em><br /><br />select<br />checkbox<br />radio<br /><br />
+			"options"		=> "<em>Comma seperated list of any of the types found below:</em><br /><br />select<br />checkbox<br />radio<br />multiselect<br /><br />
 								<em>These types should only be used when the field is `post_date`:</em><br /><br />date<br />daterange",
 			"info"			=> "The order of values in this comma seperated list needs to match the fields list."
 		);

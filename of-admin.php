@@ -36,9 +36,9 @@
 		}
 		echo '
 			<script type="text/javascript">
-			jQuery(function() {
+			/*jQuery(function() {
 			  jQuery(\'pre code\').each(function(i, e) {hljs.highlightBlock(e)});
-			});
+			});*/
 			</script>
 		';
 		echo '<div class="wrap"><div id="icon-plugins" class="icon32"></div>';
@@ -47,7 +47,7 @@
 		echo '<div class="of-caption">
 				Search &amp; Filter is a simple search and filtering plugin for Wordpress brought to you by <a href="http://www.designsandcode.com" target="_blank">Designs &amp; Code</a>.<br /><br />
 				It is essentially an advancement of the WordPress search box, adding taxonomy and post type filters to really refine your searches.<br /><br />
-				You can search by Category, Tag, Custom Taxonomy, Post Type or any combination of these easily - you can even remove the search box and simply use it as a filtering system for your posts and pages.  Taxonomies and Post Types can be displayed as dropdown selects, checkboxes or radio buttons.
+				You can search by Category, Tag, Custom Taxonomy, Post Type or any combination of these easily - you can even remove the search box and simply use it as a filtering system for your posts and pages.  Taxonomies and Post Types can be displayed as dropdown selects, checkboxes, radio buttons or multiselects.
 			</div>';
 		echo "<h3>Documentation</h3>";
 		echo '<div class="of-caption">
@@ -59,13 +59,13 @@
 		echo '<div class="of-caption">
 				To display Search &amp; Filter all you need to do is a use a shortcode:<br />
 				
-				<pre><code class="string">[searchandfilter taxonomies="category,post_tag"]</code></pre>
+				<pre><code class="string">[searchandfilter fields="search,category,post_tag"]</code></pre>
 				
 				This will display a search box, a category dropdown and a tag dropdown.  You can use the shortcode within posts/pages and widget areas.<br /><br />
 				
 				To use this within a theme file you simple need to call the `do_shortcode` function with the shortcode above within the theme file:<br />
 				
-				<pre><code class="php">&lt;?php echo do_shortcode( \'[searchandfilter taxonomies="category,post_tag"]\' ); ?&gt;</code></pre>
+				<pre><code class="php">&lt;?php echo do_shortcode( \'[searchandfilter fields="search,category,post_tag"]\' ); ?&gt;</code></pre>
 			</div>';
 		
 		
