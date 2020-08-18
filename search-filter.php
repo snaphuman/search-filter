@@ -126,7 +126,8 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 				'order_dir' => "",
 				'operators' => "",
 				'add_search_param' => "0",
-				'empty_search_url' => ""
+				'empty_search_url' => "",
+				'parents' => null
 				
 			), $atts));
 			
@@ -274,7 +275,22 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 			{
 				$types = array();
 			}
-			
+
+			// init `parent`
+			if($parents!=null)
+			{
+				$parents = explode(",",$parents);
+			}
+			else
+			{
+				$parents = explode(",",$parent);
+			}
+
+			if (!is_array($parents))
+			{
+				$parents = array();
+			}
+
 			//init empty_search_url
 			
 			
@@ -368,12 +384,16 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 				{
 					$operators[$i] =  "and"; //use default
 				}
+
+				if(isset($parents[$i])) {
+					$parent = $parents[$i];
+				}
 			}
 			
 			//set all form defaults / dropdowns etc
 			$this->set_defaults();
 
-			return $this->get_search_filter_form($submit_label, $search_placeholder, $fields, $types, $labels, $hierarchical, $hide_empty, $show_count, $post_types, $order_by, $order_dir, $operators, $all_items_labels, $empty_search_url, $add_search_param, $class);
+			return $this->get_search_filter_form($submit_label, $search_placeholder, $fields, $types, $labels, $hierarchical, $hide_empty, $show_count, $post_types, $order_by, $order_dir, $operators, $all_items_labels, $empty_search_url, $add_search_param, $class, $parent);
 		}
 
 
@@ -540,7 +560,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 					}
 				}
 			}
-			
+
 			$this->defaults[SF_FPRE.'category'] = $categories;
 
 
@@ -1085,7 +1105,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 			
 		}
 	
-		public function get_search_filter_form($submitlabel, $search_placeholder, $fields, $types, $labels, $hierarchical, $hide_empty, $show_count, $post_types, $order_by, $order_dir, $operators, $all_items_labels, $empty_search_url, $add_search_param, $class)
+		public function get_search_filter_form($submitlabel, $search_placeholder, $fields, $types, $labels, $hierarchical, $hide_empty, $show_count, $post_types, $order_by, $order_dir, $operators, $all_items_labels, $empty_search_url, $add_search_param, $class, $parent)
 		{
 			$returnvar = '';
 
@@ -1153,8 +1173,8 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 								$returnvar .= $this->build_post_date_element($labels, $i, $types, $field);
 							}
 							else
-							{	
-								$returnvar .= $this->build_taxonomy_element($types, $labels, $field, $hierarchical, $hide_empty, $show_count, $order_by, $order_dir, $operators, $all_items_labels, $i);
+							{
+								$returnvar .= $this->build_taxonomy_element($types, $labels, $field, $hierarchical, $hide_empty, $show_count, $order_by, $order_dir, $operators, $all_items_labels, $parent, $i);
 							}
 							$i++;
 
@@ -1324,7 +1344,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 		}
 		
 		//gets all the data for the taxonomy then display as form element
-		function build_taxonomy_element($types, $labels, $taxonomy, $hierarchical, $hide_empty, $show_count, $order_by, $order_dir, $operators, $all_items_labels, $i)
+		function build_taxonomy_element($types, $labels, $taxonomy, $hierarchical, $hide_empty, $show_count, $order_by, $order_dir, $operators, $all_items_labels, $parent, $i)
 		{
 			$returnvar = "";
 			
@@ -1352,7 +1372,8 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 					'show_option_none' => '',
 					'show_count' => '0',
 					'show_option_all' => '',
-					'show_option_all_sf' => ''
+					'show_option_all_sf' => '',
+					'parent' => $parent,
 				);
 				
 				if(isset($hierarchical[$i]))
@@ -1455,9 +1476,17 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 		public function generate_wp_dropdown($args, $name, $currentid = 0, $labels = null, $defaultval = "0")
 		{
 			$args['name'] = $args['sf_name'];
-			
+
+
 			$returnvar = '';
-			
+
+			if(is_numeric($args['parent'])){
+				$args['parent'] = intval($args['parent']);
+			} else {
+				unset($args['parent']);
+			}
+
+
 			if($args['show_option_all_sf']=="")
 			{
 				$args['show_option_all'] = $labels->all_items != "" ? $labels->all_items : 'All ' . $labels->name;
