@@ -62,7 +62,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 
 		public function __construct()
 		{
-			
+
 			// Set up reserved fields
 			$this->frmreserved = array(SF_FPRE."category", SF_FPRE."search", SF_FPRE."post_tag", SF_FPRE."submitted", SF_FPRE."post_date", SF_FPRE."post_types");
 			$this->frmqreserved = array(SF_FPRE."category_name", SF_FPRE."s", SF_FPRE."tag", SF_FPRE."submitted", SF_FPRE."post_date", SF_FPRE."post_types"); //same as reserved
@@ -304,7 +304,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 					if($fields[$i] == 'post_date')
 					{//check for post date field
 					
-						if(($types[$i]!="date")&&($types[$i]!="daterange"))
+						if(($types[$i]!="date")&&($types[$i]!="daterange")&&($types[$i]!="year"))
 						{//if not expected value 
 							
 							$types[$i] = "date"; //use default
@@ -503,7 +503,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 				{
 					//get post dates into array
 					$post_date = explode("+", esc_attr(urlencode($wp_query->query['post_date'])));
-					
+
 					if(!empty($post_date))
 					{
 						//if there is more than 1 post date and the dates are not the same
@@ -523,16 +523,41 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 						
 							if (!empty($post_date[0]))
 							{
-								$post_time = strtotime($post_date[0]);
-								$query->set('year', date('Y', $post_time));
-								$query->set('monthnum', date('m', $post_time));
-								$query->set('day', date('d', $post_time));
+
+								$is_year = $this->validate_date($post_date[0], "Y");
+								$is_date = $this->validate_date($post_date[0], "Y-m-d");
+
+								if ($is_year)
+								{
+									$post_time = $post_date[0];
+									$args = array(
+										'after'    => array(
+											'year'  => $post_time,
+											'month' => 1,
+											'day'   => 1,
+										),
+										'before'    => array(
+											'year'  => $post_time,
+											'month' => 12,
+											'day'   => 31,
+										),
+										'inclusive' => true,
+									);
+									$query->set('date_query', $args);
+								}
+
+								if ($is_date)
+								{
+									$post_time = strtotime($post_date[0]);
+									$query->set('year', date('Y', $post_time));
+									$query->set('monthnum', date('m', $post_time));
+									$query->set('day', date('d', $post_time));
+								}
 							}
 						}
 					}
 				}
 			}
-
 			return $query;
 		}
 
@@ -562,7 +587,6 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 			}
 
 			$this->defaults[SF_FPRE.'category'] = $categories;
-
 
 			//grab search term for prefilling search input
 			if(isset($wp_query->query['s']))
@@ -633,8 +657,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 				}
 			}
 			$this->defaults[SF_FPRE.'post_date'] = $post_date;
-			
-			
+
 			$post_types = array();
 			if(isset($wp_query->query['post_types']))
 			{
@@ -823,7 +846,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 			{
 				foreach($_POST as $key=>$val)
 				{
-					
+
 					if(!in_array($key, $this->frmreserved))
 					{//if the key is not in the reserved array (ie, on a custom taxonomy - not tags, categories, search term, post type & post date)
 						
@@ -1233,6 +1256,10 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 				$returnvar .= "</li><li>";
 				$returnvar .= $this->generate_date($taxonomychildren, $field, 1);
 			}
+			if($types[$i]=="year")
+			{
+				$returnvar .= $this->generate_date($taxonomychildren, $field, $this->tagid, "year");
+			}
 			$returnvar .= "</li>";
 			
 			return $returnvar;
@@ -1411,7 +1438,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 
 				if($types[$i]=="select")
 				{
-					$returnvar .= $this->generate_wp_dropdown($args, $taxonomy, $this->tagid, $taxonomydata->labels);
+					$returnvar .= $this->generate_wp_dropdown($args, $taxonomy, $this->tagid, $taxonomydata->labels, $parent);
 				}
 				else if($types[$i]=="checkbox")
 				{
@@ -1480,6 +1507,13 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 
 			$returnvar = '';
 
+			if (!empty($defaultval))
+			{
+				$cat_name = get_cat_name(intval($defaultval));
+				$args['option_none_value'] = $defaultval;
+				$args['show_option_none'] = "Mostrar todos en ".$cat_name;
+			}
+
 			if(is_numeric($args['parent'])){
 				$args['parent'] = intval($args['parent']);
 			} else {
@@ -1487,7 +1521,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 			}
 
 
-			if($args['show_option_all_sf']=="")
+			if($args['show_option_all_sf']=="" && empty($defaultval))
 			{
 				$args['show_option_all'] = $labels->all_items != "" ? $labels->all_items : 'All ' . $labels->name;
 			}
@@ -1721,7 +1755,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 			return $returnvar;
 		}
 		
-		public function generate_date($dropdata, $name, $currentid = 0, $labels = null, $defaultval = "0")
+		public function generate_date($dropdata, $name, $currentid = 0, $type = "date")
 		{
 			$returnvar = '';
 			$current_date = '';
@@ -1730,7 +1764,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 			if(isset($this->defaults[SF_FPRE.$name]))
 			{
 				$defaults = $this->defaults[SF_FPRE.$name];
-				
+
 				$noselected = count($defaults);
 				
 				if(($noselected>0)&&(is_array($defaults)))
@@ -1738,10 +1772,25 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 					$current_date = $defaults[$currentid];
 				}
 			}
+
+			if ($type == "date")
+			{
+				$returnvar .= '<input class="postform" type="'.$type.'" name="'.esc_attr(SF_FPRE.$name).'[]" value="'. esc_attr($current_date) .'" />';
+			}
+
+			if ($type == "year")
+			{
+				$returnvar .= '<input class="postform" placeholder="Año" type="number" min="1900" max="'.date("Y").'" step="1" name="'.esc_attr(SF_FPRE.$name).'[]" />';
+			}
 			
-			$returnvar .= '<input class="postform" type="date" name="'.esc_attr(SF_FPRE.$name).'[]" value="'. esc_attr($current_date) .'" />';
 
 			return $returnvar;
+		}
+
+		public function validate_date($date, $format = "Y-m-d")
+		{
+			$d = DateTime::createFromFormat($format, $date);
+			return $d && $d->format($format) === $date;
 		}
 	}
 }
