@@ -958,7 +958,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 					{
 						$this->urlparams .= "&";
 					}
-					$this->urlparams .= "s=".urlencode($this->searchterm);
+					$this->urlparams .= "s=".esc_html(urlencode($this->searchterm));
 					$this->hassearchquery = true;
 				}
 			}
@@ -1169,7 +1169,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 							   {
 								   $returnvar .= "<h4>".$labels[$i]."</h4>";
 							   }
-							   $clean_searchterm = (esc_attr($this->searchterm));
+							   $clean_searchterm = (esc_attr(urlencode($this->searchterm)));
 							   $returnvar .=  '<input type="text" name="'.SF_FPRE.'search" placeholder="'.esc_attr($search_placeholder).'" value="'.esc_attr($clean_searchterm).'">';
 							   $returnvar .=  '</li>';
 						   }
