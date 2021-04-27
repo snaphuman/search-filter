@@ -1096,7 +1096,7 @@ if ( ! class_exists( 'SearchAndFilter' ) )
 							{
 								$this->urlparams .= "&";
 							}
-							$this->urlparams .= "post_date=".$post_date;
+							$this->urlparams .= "post_date=".esc_html(urlencode($post_date));
 						}
 					}
 				}
